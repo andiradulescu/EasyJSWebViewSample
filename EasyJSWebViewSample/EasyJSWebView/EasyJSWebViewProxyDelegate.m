@@ -92,12 +92,59 @@ return EasyJS.call(obj, method, Array.prototype.slice.call(arguments));\
 	[self.javascriptInterfaces setValue:interface forKey:name];
 }
 
+- (void) injectJavascript:(UIWebView *)webView{
+    if (! self.javascriptInterfaces){
+		self.javascriptInterfaces = [[NSMutableDictionary alloc] init];
+	}
+	
+	NSMutableString* injection = [[NSMutableString alloc] init];
+	
+	//inject the javascript interface
+	for(id key in self.javascriptInterfaces) {
+		NSObject* interface = [self.javascriptInterfaces objectForKey:key];
+		
+		[injection appendString:@"EasyJS.inject(\""];
+		[injection appendString:key];
+		[injection appendString:@"\", ["];
+		
+		unsigned int mc = 0;
+		Class cls = object_getClass(interface);
+		Method * mlist = class_copyMethodList(cls, &mc);
+		for (int i = 0; i < mc; i++){
+			[injection appendString:@"\""];
+			[injection appendString:[NSString stringWithUTF8String:sel_getName(method_getName(mlist[i]))]];
+			[injection appendString:@"\""];
+			
+			if (i != mc - 1){
+				[injection appendString:@", "];
+			}
+		}
+		
+		free(mlist);
+		
+		[injection appendString:@"]);"];
+	}
+	
+	
+	NSString* js = INJECT_JS;
+	//inject the basic functions first
+	[webView stringByEvaluatingJavaScriptFromString:js];
+	//inject the function interface
+	[webView stringByEvaluatingJavaScriptFromString:injection];
+	
+	[injection release];
+}
+
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error{
-	[self.realDelegate webView:webView didFailLoadWithError:error];
+    if ([self.realDelegate respondsToSelector:@selector(webView:didFailLoadWithError:)])
+        [self.realDelegate webView:webView didFailLoadWithError:error];
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView{
-	[self.realDelegate webViewDidFinishLoad:webView];
+    if ([self.realDelegate respondsToSelector:@selector(webViewDidFinishLoad:)])
+        [self.realDelegate webViewDidFinishLoad:webView];
+    
+    [self injectJavascript:webView];
 }
 
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType{
@@ -173,52 +220,15 @@ return EasyJS.call(obj, method, Array.prototype.slice.call(arguments));\
 		return YES;
 	}
 	
-	return [self.realDelegate webView:webView shouldStartLoadWithRequest:request navigationType:navigationType];
+    if ([self.realDelegate respondsToSelector:@selector(webView:shouldStartLoadWithRequest:navigationType:)])
+        return [self.realDelegate webView:webView shouldStartLoadWithRequest:request navigationType:navigationType];
+    else
+        return YES;
 }
 
-- (void)webViewDidStartLoad:(UIWebView *)webView{
-	[self.realDelegate webViewDidStartLoad:webView];
-	
-	if (! self.javascriptInterfaces){
-		self.javascriptInterfaces = [[NSMutableDictionary alloc] init];
-	}
-	
-	NSMutableString* injection = [[NSMutableString alloc] init];
-	
-	//inject the javascript interface
-	for(id key in self.javascriptInterfaces) {
-		NSObject* interface = [self.javascriptInterfaces objectForKey:key];
-		
-		[injection appendString:@"EasyJS.inject(\""];
-		[injection appendString:key];
-		[injection appendString:@"\", ["];
-		
-		unsigned int mc = 0;
-		Class cls = object_getClass(interface);
-		Method * mlist = class_copyMethodList(cls, &mc);
-		for (int i = 0; i < mc; i++){
-			[injection appendString:@"\""];
-			[injection appendString:[NSString stringWithUTF8String:sel_getName(method_getName(mlist[i]))]];
-			[injection appendString:@"\""];
-			
-			if (i != mc - 1){
-				[injection appendString:@", "];
-			}
-		}
-		
-		free(mlist);
-		
-		[injection appendString:@"]);"];
-	}
-	
-	
-	NSString* js = INJECT_JS;
-	//inject the basic functions first
-	[webView stringByEvaluatingJavaScriptFromString:js];
-	//inject the function interface
-	[webView stringByEvaluatingJavaScriptFromString:injection];
-	
-	[injection release];
+- (void)webViewDidStartLoad:(UIWebView *)webView {
+    if ([self.realDelegate respondsToSelector:@selector(webViewDidStartLoad:)])
+        [self.realDelegate webViewDidStartLoad:webView];
 }
 
 - (void)dealloc{

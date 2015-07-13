@@ -1,6 +1,12 @@
 EasyJSWebViewSample - a sample project of EasyJSWebView
 ===================
 
+> This repository was forked from https://github.com/dukeland/EasyJSWebViewSample
+
+> This is the sample that coresponds to this fork: https://github.com/andiradulescu/EasyJSWebView
+
+> The fork fixes the redirects in the webview
+
 You are using UIWebView in your iOS app and you want to do some communications between the Javascript inside the WebView and Objective-C. How would you do it?
 
 To run Javascript in Objective-C, you can use the **– stringByEvaluatingJavaScriptFromString:** method. To run Objective-C method, well it is a little bit tricky, you need to implement the **UIWebViewDelegate** and the **shouldStartLoadWithRequest** method.
@@ -9,7 +15,7 @@ Do you know how to do this in Android? You simply need to create a class and pas
 
 EasyJSWebView is a library that allows you to do the same in Objective-C. Download it and try. **I promise. It is much simpler to do the job!!!**
 
-You may find the library [here](https://github.com/dukeland/EasyJSWebView).
+You may find the library [here](https://github.com/andiradulescu/EasyJSWebView).
 
 ###Some code to demonstrate
 So basically what you need to do is create a class like this.
